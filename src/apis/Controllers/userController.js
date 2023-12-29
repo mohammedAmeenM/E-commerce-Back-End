@@ -1,39 +1,41 @@
 const userSchema = require('../model/userSchema');
 const bcrypt=require('bcrypt') 
 const ganerateToken=require('../utils/jsonWebTokens')
+const asyncErrorHandler=require('../utils/asyncErrorHandler')
 
 
 
-const createUser = async (req, res) => {
-    try {
-        const { name, email, username, password } = req.body;
+
+const createUser =asyncErrorHandler( async (req, res) => {
+    const { name, email, username, password } = req.body;
+
+    const user=await userSchema.findOne({username:username})
+    // console.log(user.username)   
+    if(user)return res.status(400).json({
+        message:"user allreday exist"
+    })
         const newUser = await userSchema.create({
             name,
             email,
             username,
             password
         });
-        console.log(newUser);
+       
         res.status(200).json({
             status: 'success',
             data: {
                 newUser
             }
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({
-            status: 'fail'
-        });
-    }
-};
+     
+})
 
-const userLogin = async (req, res) => {
+const userLogin = asyncErrorHandler( async (req, res) => {
     const username=req.body.username;
     const password=req.body.password;
     // console.log(username);
 // console.log(password);
-    try {
+ 
         const user = await userSchema.findOne({username}).select('+password');
             // console.log("uxdf",user.password);
         if (!user) {
@@ -72,15 +74,9 @@ const userLogin = async (req, res) => {
             }
         });
 
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            status: 'fail',
-            message: 'Internal server error'
-        });
-    }
-};
+ 
+});
 
 module.exports = {
     createUser,userLogin
-};
+}
