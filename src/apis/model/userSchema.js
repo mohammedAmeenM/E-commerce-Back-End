@@ -5,24 +5,27 @@ const userSchema = new mongoose.Schema({
     name: String,
     email: String,
     username: String,
-    password: String
+    password: String 
 });
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function(next) {
     const user = this;
+
     if (!user.isModified('password')) return next();
+
     try {
         const hashedPassword = await bcrypt.hash(user.password, 10);
         user.password = hashedPassword;
         next();
-    } catch (err) {
-        return next(err);
+    } catch (error) {
+        console.error('Error hashing password:', error);
+        next(error);
     }
 });
 
-userSchema.methods.comparePassword=async(password,passwordDB)=>{
-    return await bcrypt.compare(password,passwordDB)
+userSchema.methods.comparePassword = async function(password, passwordDB) {
+    return await bcrypt.compare(password, passwordDB);
 }
 
-const user= mongoose.model('user', userSchema);
-module.exports=user
+const User = mongoose.model('User', userSchema);
+module.exports = User;

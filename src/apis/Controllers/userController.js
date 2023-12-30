@@ -10,18 +10,19 @@ const createUser =asyncErrorHandler( async (req, res) => {
     const { name, email, username, password } = req.body;
 
     const user=await userSchema.findOne({username:username})
+    console.log(user);
     // console.log(user.username)   
     if(user)return res.status(400).json({
         message:"user allreday exist"
     })
         const newUser = await userSchema.create({
-            name,
-            email,
-            username,
-            password
+            name:name,
+            email:email,
+            username:username,
+            password:password
         });
        
-        res.status(200).json({
+        res.status(201).json({
             status: 'success',
             data: {
                 newUser
