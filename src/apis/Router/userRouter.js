@@ -1,11 +1,12 @@
 const express=require('express');
 const userController=require('../Controllers/userController');
-const productController=require('../Controllers/productController')
 const userRouter=express.Router()
 
 
 
 userRouter.post('/register',(userController.createUser))
 .post('/login',(userController.userLogin))
-.post('/products',(productController.createProduct))
-module.exports=userRouter;
+.get('/products',(userController.userViewProduct))
+.get('/products/:id',(userController.productById))
+.get('/products/category/:categoryname',(userController.productListCategory))
+module.exports=userRouter; 

@@ -2,6 +2,7 @@ const jwt=require('jsonwebtoken');
 const Users=require('../model/userSchema')
 const mongoose = require("mongoose");
 const productSchema = require('../model/productSchema');
+const asyncErrorHandler=require('../utils/asyncErrorHandler');
 
  
 const adminLogin=async (req,res)=>{
@@ -67,7 +68,7 @@ const userById=  async (req,res)=>{
 const createProduct= async(req,res)=>{
      const {title,description,price,image,category}=req.body;
      const newProduct= await productSchema.create({
-        title,description,price,image,  
+        title,description,price,image,category  
      })
      res.status(201).json({
         status: 'success',
@@ -76,6 +77,78 @@ const createProduct= async(req,res)=>{
         })
 }
   
+const adminListProducts=asyncErrorHandler(async(req,res)=>{
+    const products= await productSchema.find();
+    if(!products){
+       return res.status(404).json({
+            status:'fail',
+            message:'products not found'
+        })
+    }
+    res.status(200).json({
+        status:'success',
+        message:'successfully fetched datas',
+        products:products
+        })
+})
+
+const adminProductById=asyncErrorHandler(async(req,res)=>{
+    const productId=req.params.id;
+    if(!mongoose.Types.ObjectId.isValid(productId)){
+      return res.status(400).json({
+            status:'fail',
+            message:'invalid ID format'
+        })
+    }
+    const product =await productSchema.findById(productId);
+    if(!product){
+       return res.status(404).json({
+            status:'fail',
+            message:'product not found'
+        })
+    }
+    res.status(200).json({
+        status:'success',
+        message:'successfully fetched data',
+        product:product
+    })
+})
+
+const updateProduct = asyncErrorHandler(async (req, res) => {
+    const { id, title, description, price, image, category } = req.body;
+  
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Invalid product ID format',
+      });
+    }
+  
+    const product = await productSchema.findById(id);
+  
+    if (!product) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Product not found in the database',
+      });
+    }
+  
+    // Update the product
+    const update = await productSchema.findByIdAndUpdate(
+      { _id: id },
+      { title, description, price, image, category },
+      { new: true }
+    );
+  
+    res.status(201).json({
+      status: 'success',
+      message: 'Successfully updated',
+      product: update,
+    });
+  });
+  
+
+
 module.exports={
-    adminLogin,allUsers,userById,createProduct
+    adminLogin,allUsers,userById,createProduct,adminListProducts,adminProductById,updateProduct
 } 

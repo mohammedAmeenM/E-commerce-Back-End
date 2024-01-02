@@ -2,6 +2,8 @@ const userSchema = require('../model/userSchema');
 const bcrypt=require('bcrypt') 
 const ganerateToken=require('../utils/jsonWebTokens')
 const asyncErrorHandler=require('../utils/asyncErrorHandler')
+const productSchema=require('../model/productSchema');
+const mongoose = require('mongoose');
 
 
 
@@ -78,6 +80,63 @@ const userLogin = asyncErrorHandler( async (req, res) => {
  
 });
 
+const userViewProduct=asyncErrorHandler (async (req,res)=>{
+    console.log('looiiiii');
+    const product=await productSchema.find();
+    if(!product){
+       return res.status(404).json({
+            status:'fail',
+            message:'Product Not Found'
+        })
+    }
+    res.status(200).json({
+        status:'success',
+        message:'successfully fetched datas',
+        products:product
+    })
+
+})
+
+const productById=asyncErrorHandler(async(req,res)=>{
+    const productId=req.params.id ;
+    if(!mongoose.Types.ObjectId.isValid(productId)){
+        return res.status(400).json({
+            status:'fail',
+            message:'invalid product ID format'
+        })
+    }
+    const product=await productSchema.findById(productId)
+    if(!product){
+        return res.status(404).json({
+            status:'fail',
+            message:'product not found'
+        })
+    }
+    res.status(200).json({
+        status:'success',
+        message:'successfully fetched data',
+        product:product
+    })
+})
+
+const productListCategory=asyncErrorHandler(async(req,res)=>{
+    const Paramscategory=req.params.categoryname;
+    console.log(Paramscategory);
+    const category=await productSchema.find({category:Paramscategory})
+    console.log(category);
+    if(!category){
+        return res.status(404).json({
+            status:'fail',
+            message:'products not found'
+        })
+    }
+    res.status(200).json({
+        status:'success',
+        message:'successfully fetched datas',
+        products:category
+    })
+})
+
 module.exports = {
-    createUser,userLogin
+    createUser,userLogin,userViewProduct,productById,productListCategory
 }

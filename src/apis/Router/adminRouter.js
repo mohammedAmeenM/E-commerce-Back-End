@@ -1,13 +1,18 @@
 const express=require('express');
 const adminRouter=express.Router()
 const adminController=require('../Controllers/adminController')
-const verifyToken=require('../middlewares/adminAuth')
+const verifyToken=require('../middlewares/adminAuth');
+const uploadImage = require('../middlewares/uploads/multerImageUpload');
 
  
 
 adminRouter.post('/login',(adminController.adminLogin))
-.get('/users',verifyToken,(adminController.allUsers))
-.get('/users/:id',verifyToken,(adminController.userById))
-.post ('/products',verifyToken,(adminController.createProduct))
+.use(verifyToken)
+.get('/users',(adminController.allUsers))
+.get('/users/:id',(adminController.userById))
+.post ('/products',uploadImage,(adminController.createProduct))
+.get('/products',(adminController.adminListProducts))
+.get('/products/:id',(adminController.adminProductById))
+.put('/products',(adminController.updateProduct))
 
 module.exports=adminRouter;
