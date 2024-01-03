@@ -14,5 +14,6 @@ adminRouter.post('/login',(adminController.adminLogin))
 .get('/products',(adminController.adminListProducts))
 .get('/products/:id',(adminController.adminProductById))
 .put('/products',(adminController.updateProduct))
+.delete('/products',(adminController.deleteProduct))
 
 module.exports=adminRouter;

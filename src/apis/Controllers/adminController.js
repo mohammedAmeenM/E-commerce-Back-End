@@ -67,6 +67,7 @@ const userById=  async (req,res)=>{
 
 const createProduct= async(req,res)=>{
      const {title,description,price,image,category}=req.body;
+     console.log(req.body);
      const newProduct= await productSchema.create({
         title,description,price,image,category  
      })
@@ -133,7 +134,6 @@ const updateProduct = asyncErrorHandler(async (req, res) => {
       });
     }
   
-    // Update the product
     const update = await productSchema.findByIdAndUpdate(
       { _id: id },
       { title, description, price, image, category },
@@ -147,8 +147,30 @@ const updateProduct = asyncErrorHandler(async (req, res) => {
     });
   });
   
+  const deleteProduct=asyncErrorHandler(async(req,res)=>{
+    const {productId}=req.body;
+    console.log(productId);
+    if(!mongoose.Types.ObjectId.isValid(productId)){
+        return res.status(400).json({
+            status:'fail',
+            message:'invalid product ID format'
+        })
+    }
+    const deletePro= await productSchema.findByIdAndDelete({_id:productId})
+        if(!deletePro){
+            return res.status(404).json({
+                status:'fail',
+                message:'product not found'
+            })
+        }
+        res.status(200).json({
+            status:'success',
+            message:'successfully delete product'
+
+        })
+  })
 
 
 module.exports={
-    adminLogin,allUsers,userById,createProduct,adminListProducts,adminProductById,updateProduct
+    adminLogin,allUsers,userById,createProduct,adminListProducts,adminProductById,updateProduct,deleteProduct
 } 

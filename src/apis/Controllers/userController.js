@@ -81,7 +81,6 @@ const userLogin = asyncErrorHandler( async (req, res) => {
 });
 
 const userViewProduct=asyncErrorHandler (async (req,res)=>{
-    console.log('looiiiii');
     const product=await productSchema.find();
     if(!product){
        return res.status(404).json({
