@@ -9,4 +9,7 @@ userRouter.post('/register',(userController.createUser))
 .get('/products',(userController.userViewProduct))
 .get('/products/:id',(userController.productById))
 .get('/products/category/:categoryname',(userController.productListCategory))
+.post('/:id/cart',(userController.addToCart))
+.get ('/:id/cart',(userController.viewCartProducts))
+.post('/:id/wishlist',(userController.addToWishList))
 module.exports=userRouter; 

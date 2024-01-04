@@ -135,7 +135,106 @@ const productListCategory=asyncErrorHandler(async(req,res)=>{
         products:category
     })
 })
+const addToCart=asyncErrorHandler(async(req,res)=>{
+    const userId=req.params.id
+    if(!mongoose.Types.ObjectId.isValid(userId)){
+       return res.status(400).json({
+            status:'fail',
+            message:'invalid user ID format'
+        })
+    }
+    const {productId}=req.body;
+    if(!productId){
+       return res.status(404).json({
+            status:'fail',
+            message:'product not found'
+        })
+    }
+    const user = await userSchema.findById(userId);
+
+    if (!user) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'User not found'
+        });
+    }
+
+    if (user.cart.includes(productId)) {
+        return res.status(409).json({
+            status: 'fail',
+            message: 'Product already exists in the cart'
+        });
+    }
+
+   await userSchema.updateOne({_id:userId},{$addToSet:{cart:productId}})
+    res.status(200).json({
+        status:'success',
+        message:'successfully product added to cart'
+    })
+  })
+
+  const viewCartProducts=asyncErrorHandler(async(req,res)=>{
+    const userId=req.params.id;
+    if(!mongoose.Types.ObjectId.isValid(userId)){
+        return res.status(400).json({
+             status:'fail',
+             message:'invalid user ID format'
+         })
+     }
+    const user=await User.findById(userId)
+    if(!user){
+        return res.status(404).json({
+            status:'fail',
+            message:'user not found'
+        })
+    }
+    const cartUserIds=user.cart;
+    if(cartUserIds.length===0){
+        return res.status(200).json({
+            status:'success',
+            message:'user cart is empty',data:[]
+        })
+    }
+    const cartProducts= await productSchema.find({_id:{$in :cartUserIds}});
+        res.status(200).json({
+            status:'success',
+            message:'successfull fetched cart products',
+            data:cartProducts
+        })
+  })
+
+  const addToWishList=asyncErrorHandler(async(req,res)=>{
+    const userId=req.params.id;
+    if(!userId){
+        return res.status(404).json({
+            status:'fail',
+            message:'user id not found'
+        })
+    }
+    const {productId}=req.body;
+    const products = await productSchema.findById(productId)
+    if(!products){
+        return res.status(404).json({
+            status:'fail',
+            message:'product not found'
+        })
+    }
+    const findProduct=await userSchema.findOne({_id:userId,wishlist:productId})
+    if(findProduct){
+        return res.status(409).json({
+            status:'fail',
+            message:'product allready exist'
+        })
+    }
+    await userSchema.updateOne({_id:userId},{$push : {wishlist:productId}})
+        res.status(200).json({
+            status:'success',
+            message:'product successfully add to wishlist'
+        })
+
+  })
+
 
 module.exports = {
-    createUser,userLogin,userViewProduct,productById,productListCategory
+    createUser,userLogin,userViewProduct,productById,productListCategory,addToCart,viewCartProducts,addToWishList
 }

@@ -3,6 +3,7 @@ const Users=require('../model/userSchema')
 const mongoose = require("mongoose");
 const productSchema = require('../model/productSchema');
 const asyncErrorHandler=require('../utils/asyncErrorHandler');
+const User = require('../model/userSchema');
 
  
 const adminLogin=async (req,res)=>{
@@ -169,6 +170,7 @@ const updateProduct = asyncErrorHandler(async (req, res) => {
 
         })
   })
+
 
 
 module.exports={
