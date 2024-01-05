@@ -181,7 +181,7 @@ const addToCart=asyncErrorHandler(async(req,res)=>{
              message:'invalid user ID format'
          })
      }
-    const user=await User.findById(userId)
+    const user=await userSchema.findById(userId)
     if(!user){
         return res.status(404).json({
             status:'fail',
@@ -234,7 +234,55 @@ const addToCart=asyncErrorHandler(async(req,res)=>{
 
   })
 
+  const viewWishlist=asyncErrorHandler(async(req,res)=>{
+    const userId=req.params.id;
+    if(!mongoose.Types.ObjectId.isValid(userId)){
+       return res.status(400).json({
+            status:'error',
+            message:'invalid user ID format'
+        })
+    }
+    const user=await userSchema.findById(userId)
+    if(!user){
+        return res.status(404).json({
+            status:'fail',
+            message:'user not found'
+        })
+    }
+    const wishlistIds=user.wishlist;
+    if(wishlistIds.length===0){
+       return res.status(200).json({
+            status:'success',
+            message:'user wishlist is empty ',
+            data:[]
+        })
+    }
+    const wishlistProducts=await productSchema.find({_id:{$in:wishlistIds}})
+
+        res.status(200).json({
+            status:'success',
+            message:'successfully feched user wishlist products',
+            data:wishlistProducts
+        })
+  })
+
+  const deleteWishlist=asyncErrorHandler(async(req,res)=>{
+    const userId=req.params.id;
+    const {productId}=req.body;
+    if(!productId){
+        return res.status(404).json({status:'fail',message:'product not found'})
+    }
+    const user=await userSchema.findById(userId);
+    if(!user){
+        return res.status(404).json({status:'fail',message:'user not found'})
+    }
+    console.log(productId);
+    await userSchema.updateOne({_id:userId},{$pull:{wishlist:productId}})
+    res.status(200).json({status:'success',message:'successfully remove product'})
+  })
+
 
 module.exports = {
-    createUser,userLogin,userViewProduct,productById,productListCategory,addToCart,viewCartProducts,addToWishList
+    createUser,userLogin,userViewProduct,productById,productListCategory,addToCart,viewCartProducts,addToWishList,
+    viewWishlist,deleteWishlist
 }
