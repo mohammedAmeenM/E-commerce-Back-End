@@ -4,6 +4,7 @@ const ganerateToken=require('../utils/jsonWebTokens')
 const asyncErrorHandler=require('../utils/asyncErrorHandler')
 const productSchema=require('../model/productSchema');
 const mongoose = require('mongoose');
+const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 
 
@@ -281,6 +282,17 @@ const addToCart=asyncErrorHandler(async(req,res)=>{
     res.status(200).json({status:'success',message:'successfully remove product'})
   })
 
+  const paymentSession=asyncErrorHandler(async(req,res)=>{
+    const userId=req.params.id;
+    const user=await userSchema.find({_id:userId}).populate("cart")
+    if(!user){
+        res.status(404).json({status:'fail',message:'user not found'})
+    }
+    const cartProducts=user.cart;
+    if(cartProducts.length===0){
+        res.status(200).json({status:'success',message:'cart is empty',data:[]})
+    }
+  })
 
 module.exports = {
     createUser,userLogin,userViewProduct,productById,productListCategory,addToCart,viewCartProducts,addToWishList,
