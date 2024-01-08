@@ -4,6 +4,7 @@ const ganerateToken=require('../utils/jsonWebTokens')
 const asyncErrorHandler=require('../utils/asyncErrorHandler')
 const productSchema=require('../model/productSchema');
 const mongoose = require('mongoose');
+const orderSchema = require('../model/orderSchema');
 const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 
@@ -282,19 +283,104 @@ const addToCart=asyncErrorHandler(async(req,res)=>{
     res.status(200).json({status:'success',message:'successfully remove product'})
   })
 
+
+let sValue={};
   const paymentSession=asyncErrorHandler(async(req,res)=>{
     const userId=req.params.id;
-    const user=await userSchema.find({_id:userId}).populate("cart")
+    const user = await userSchema.findOne({ _id: userId }).populate("cart").exec();
     if(!user){
         res.status(404).json({status:'fail',message:'user not found'})
     }
     const cartProducts=user.cart;
-    if(cartProducts.length===0){
+    if(cartProducts.length === 0){
         res.status(200).json({status:'success',message:'cart is empty',data:[]})
     }
+    const lineItems=cartProducts.map((item)=>{
+        return{
+            price_data: {
+                currency: "inr",
+                product_data: {
+                  name: item.title,
+                  description: item.description,
+                },
+                unit_amount: Math.round(item.price * 100),
+              },
+              quantity: 1,
+        }
+    })
+    session=await stripe.checkout.sessions.create({
+        payment_method_types:['card'],
+        line_items:lineItems,
+        mode:'payment',
+        success_url: `http://localhost:6000/api/users/payment/success`, 
+        cancel_url: "http://localhost:3000/api/users/payment/cancel",
+    })
+    if(!session){
+        return res.status(400).json({
+            status:'fail',
+            message:'error on session side'
+        })
+    }
+    sValue = {
+        userId,
+        user,
+        session,
+      };
+  
+      res.status(200).json({
+        status: "Success",
+        message: "Strip payment session created",
+        url: session.url,
+      });
+  })
+  const successPayment=asyncErrorHandler(async(req,res)=>{
+    const {id,user,session}=sValue;
+    console.log(id);
+    const userId = user._id;
+    const cartItems = user.cart;
+    const orders = await orderSchema.create({
+        userId: id,
+        products: cartItems.map(
+          (value) => new mongoose.Types.ObjectId(value._id)
+        ),
+        order_id: session.id,
+        payment_id: `demo ${Date.now()}`,
+        total_amount: session.amount_total / 100,
+      });
+  
+      if (!orders) {
+        return res.json({ message: "error occured while inputing to orderDB" });
+      }
+  
+      const orderId = orders._id;
+  
+      const userUpdate = await userSchema.updateOne(
+        { _id: userId },
+        {
+          $push: { orders: orderId },
+          $set: { cart: [] },
+        },
+        { new: true }
+      );
+  
+      console.log(userUpdate);
+  
+  
+      if (userUpdate) {
+        res.status(200).json({
+          status: "Success",
+          message: "Payment Successful.",
+        });
+      } else {
+        res.status(500).json({
+          status: "Error",
+          message: "Failed to update user data.",
+        });
+      }
+
   })
 
 module.exports = {
     createUser,userLogin,userViewProduct,productById,productListCategory,addToCart,viewCartProducts,addToWishList,
-    viewWishlist,deleteWishlist
+    viewWishlist,deleteWishlist,paymentSession,successPayment
 }

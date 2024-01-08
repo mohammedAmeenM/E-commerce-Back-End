@@ -16,4 +16,6 @@ userRouter.post('/register',(userController.createUser))
 .post('/:id/wishlist',(userController.addToWishList))
 .get('/:id/wishlist',(userController.viewWishlist))
 .delete('/:id/wishlist',(userController.deleteWishlist))
+.post('/:id/payment',(userController.paymentSession))
+.get('/payment/success',(userController.successPayment))
 module.exports=userRouter; 
