@@ -18,4 +18,5 @@ userRouter.post('/register',(userController.createUser))
 .delete('/:id/wishlist',(userController.deleteWishlist))
 .post('/:id/payment',(userController.paymentSession))
 .get('/payment/success',(userController.successPayment))
+.get('/:id/orders',(userController.orderDetails))
 module.exports=userRouter; 

@@ -4,7 +4,7 @@ const ganerateToken=require('../utils/jsonWebTokens')
 const asyncErrorHandler=require('../utils/asyncErrorHandler')
 const productSchema=require('../model/productSchema');
 const mongoose = require('mongoose');
-const orderSchema = require('../model/orderSchema');
+const Order = require('../model/orderSchema');
 const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 
@@ -338,7 +338,7 @@ let sValue={};
     console.log(id);
     const userId = user._id;
     const cartItems = user.cart;
-    const orders = await orderSchema.create({
+    const orders = await Order.create({
         userId: id,
         products: cartItems.map(
           (value) => new mongoose.Types.ObjectId(value._id)
@@ -380,7 +380,35 @@ let sValue={};
 
   })
 
+  const orderDetails=asyncErrorHandler(async(req,res)=>{
+    const userId = req.params.id;
+
+  const user = await userSchema.findById(userId).populate('orders').exec();
+
+  if (!user) {
+      return res.status(404).json({
+          status: 'Failure',
+          message: 'User Not Found',
+      });
+  }
+
+  const orderProduts = user.orders;
+  if (orderProduts.length === 0) {
+      return res.status(200).json({
+          message: "You don't have any product orders.",
+          data: [],
+      });
+  }
+  const ordersWithProducts = await Order.find({ _id: { $in: orderProduts } }).populate("products").exec();
+
+  res.status(200).json({
+      message: 'Ordered Products Details Found',
+      data: ordersWithProducts,
+  });
+
+  })
+
 module.exports = {
     createUser,userLogin,userViewProduct,productById,productListCategory,addToCart,viewCartProducts,addToWishList,
-    viewWishlist,deleteWishlist,paymentSession,successPayment
+    viewWishlist,deleteWishlist,paymentSession,successPayment,orderDetails
 }

@@ -16,4 +16,7 @@ adminRouter.post('/login',(adminController.adminLogin))
 .put('/products',(adminController.updateProduct))
 .delete('/products',(adminController.deleteProduct))
 
+.get('/status',adminController.status)
+.get('/orders',(adminController.orderDtails))
+
 module.exports=adminRouter;

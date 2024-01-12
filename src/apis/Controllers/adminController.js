@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const productSchema = require('../model/productSchema');
 const asyncErrorHandler=require('../utils/asyncErrorHandler');
 const User = require('../model/userSchema');
+const Order=require('../model/orderSchema')
 
  
 const adminLogin=async (req,res)=>{
@@ -171,8 +172,47 @@ const updateProduct = asyncErrorHandler(async (req, res) => {
         })
   })
 
+  const status=asyncErrorHandler(async(req,res)=>{
+       const totalRevenue=await Order.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalProduct: { $sum: { $size: "$products" } },
+            totalRevenue: { $sum: "$total_amount" },
+          },
+        },
+      ]);
+      if (totalRevenue.length > 0) {
+        // You have results
+        res.status(200).json({ status: "Success", data: totalRevenue[0] });
+      } else {
+        // No results found
+        res
+          .status(200)
+          .json({
+            status: "Success",
+            data: { totalProduct: 0, totalRevenue: 0 },
+          });
+      }
+  })
+
+  const orderDtails=asyncErrorHandler(async(req,res)=>{
+    const products = await Order.find();
+        if (products.length === 0) {
+        return res.status(200).json({
+            message: "No products ",
+     });
+    }
+     res.status(200).json({
+        status: "Success",
+        message: "Successfully fetched order details",
+        products,
+    });
+  })
+
 
 
 module.exports={
-    adminLogin,allUsers,userById,createProduct,adminListProducts,adminProductById,updateProduct,deleteProduct
+    adminLogin,allUsers,userById,createProduct,adminListProducts,adminProductById,updateProduct,deleteProduct,
+    status,orderDtails
 } 
